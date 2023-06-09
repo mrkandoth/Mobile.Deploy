@@ -1,0 +1,59 @@
+name: iOS Build and Deploy
+
+on:
+  push:
+    branches:
+      - main  # Replace with your branch name
+
+jobs:
+  build:
+    name: Build
+    runs-on: macOS-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      
+      - name: Set up Xcode
+        uses: actions/setup-xcode@v1
+        with:
+          xcode-version: 12  # Replace with your desired Xcode version
+      
+      - name: Install Dependencies
+        run: |
+          bundle install
+          bundle exec pod install
+
+      - name: Build
+        run: xcodebuild clean build -workspace YourProject.xcworkspace -scheme YourScheme -configuration Release -sdk iphoneos
+
+  deploy:
+    name: Deploy to App Store
+    needs: build
+    runs-on: macOS-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      
+      - name: Set up Xcode
+        uses: actions/setup-xcode@v1
+        with:
+          xcode-version: 12  # Replace with your desired Xcode version
+      
+      - name: Install Dependencies
+        run: |
+          bundle install
+          bundle exec pod install
+
+      - name: Archive
+        run: xcodebuild archive -workspace YourProject.xcworkspace -scheme YourScheme -archivePath $PWD/build/YourApp.xcarchive
+
+      - name: Export Archive
+        run: xcodebuild -exportArchive -archivePath $PWD/build/YourApp.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath $PWD/build
+
+      - name: Deploy to App Store
+        uses: apple-actions/app-store-connect@v1
+        with:
+          app-specific-password: ${{ secrets.APP_SPECIFIC_PASSWORD }}  # Replace with your app-specific password
+          app-path: $PWD/build/YourApp.ipa
+          bundle-id: com.yourcompany.yourapp
+          submit-for-review: true

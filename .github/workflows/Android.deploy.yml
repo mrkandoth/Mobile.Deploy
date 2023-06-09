@@ -1,0 +1,53 @@
+name: Android Build and Deploy
+
+on:
+  push:
+    branches:
+      - main  # Replace with your branch name
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'  # Replace with your desired JDK version
+
+      - name: Set up Android SDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'  # Replace with your desired JDK version
+          android-sdk-license: ${{ secrets.ANDROID_SDK_LICENSE }}  # Replace with your Android SDK license
+
+      - name: Build
+        run: ./gradlew assembleRelease
+
+  deploy:
+    name: Deploy to Play Store
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'  # Replace with your desired JDK version
+
+      - name: Set up Android SDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'  # Replace with your desired JDK version
+          android-sdk-license: ${{ secrets.ANDROID_SDK_LICENSE }}  # Replace with your Android SDK license
+
+      - name: Deploy to Play Store
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release
+          path: app/build/outputs/apk/release/app-release.apk
